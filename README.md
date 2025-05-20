@@ -7,7 +7,7 @@ ser visualizadas fotos esféricas utilizando o giroscópio/sensor de rotação d
 
 > O site **não** irá funcionar corretamente em dispositivos sem sensor de rotação(desktops, notebooks)
 
-> O site **não** funciona no navegador Brave devido
+> O site **não** funciona no navegador Brave em dispositivos móveis
 
 ## Como Usar
 
