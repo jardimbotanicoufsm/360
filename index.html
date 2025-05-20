@@ -1,68 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Gyro Panorama</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    #startButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 1em 2em;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      border: none;
-      font-size: 1.2em;
-      z-index: 1;
-      border-radius: 10px;
-      display: none;
-    }
-  </style>
+  <title>Jardim Botânico Santa Maria - Visão 360º</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <button id="startButton">Ativar sensores</button>
+  <div id="menu">
+    <h1>Jardim Botânico Santa Maria - Visão 360º</h1>
+    <div id="comboContainer">
+      <select id="panoramaSelect" style="font-size:1.1em; padding:0.5em 1em; border-radius:8px; border:1px solid #236d3c;"></select>
+    </div>
+    <button id="visualizarBtn">Visualizar</button>
+  </div>
+  <div id="panoramaContainer">
+    <button id="backBtn">← Voltar</button>
+    <button id="startButton">Ativar sensores</button>
+    <!-- O canvas do THREE.js será inserido aqui -->
+  </div>
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.132.0/build/three.module.js';
     import { DeviceOrientationControls } from './jsm/controls/DeviceOrientationControls.js';
 
-    let camera, scene, renderer, controls;
-    let started = false;
-
+    // Elementos DOM
+    const menu = document.getElementById('menu');
+    const panoramaContainer = document.getElementById('panoramaContainer');
+    const panoramaSelect = document.getElementById('panoramaSelect');
+    const visualizarBtn = document.getElementById('visualizarBtn');
+    const backBtn = document.getElementById('backBtn');
     const startButton = document.getElementById('startButton');
+
+    // Variáveis do THREE.js
+    let camera, scene, renderer, controls, sky, started = false;
+    let currentPanoramaIdx = 0;
+    let panoramas = [];
 
     // Detectar iOS
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (isIOS && typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      startButton.style.display = 'block';
-      startButton.addEventListener('click', async () => {
-        try {
-          const response = await DeviceOrientationEvent.requestPermission();
-          if (response === 'granted') {
-            startButton.style.display = 'none';
-            init();
-            animate();
-          } else {
-            alert('Permissão negada pros sensores.');
-          }
-        } catch (err) {
-          console.error(err);
-        }
+    // Carregar panoramas do JSON e popular combobox
+    fetch('panoramas.json')
+      .then(res => res.json())
+      .then(data => {
+        panoramas = data;
+        panoramas.forEach((p, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx;
+          opt.textContent = p.name;
+          panoramaSelect.appendChild(opt);
+        });
       });
-    } else {
-      init();
-      animate();
-    }
 
-    function init() {
+    visualizarBtn.addEventListener('click', () => {
+      currentPanoramaIdx = parseInt(panoramaSelect.value, 10);
+      menu.style.display = 'none';
+      panoramaContainer.style.display = 'block';
+      if (isIOS && typeof DeviceOrientationEvent?.requestPermission === 'function') {
+        startButton.style.display = 'block';
+      } else {
+        startPanorama();
+      }
+    });
+
+    backBtn.addEventListener('click', () => {
+      disposePanorama();
+      panoramaContainer.style.display = 'none';
+      menu.style.display = 'flex';
+    });
+
+    startButton.addEventListener('click', async () => {
+      try {
+        const response = await DeviceOrientationEvent.requestPermission();
+        if (response === 'granted') {
+          startButton.style.display = 'none';
+          startPanorama();
+        } else {
+          alert('Permissão negada pros sensores.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    function startPanorama() {
       started = true;
       // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+      renderer.domElement.style.display = 'block';
+      panoramaContainer.appendChild(renderer.domElement);
 
       // Scene
       scene = new THREE.Scene();
@@ -74,27 +101,51 @@
       // Sky
       const geometry = new THREE.SphereGeometry(500, 60, 40);
       geometry.scale(-1, 1, 1);
-      const texture = new THREE.TextureLoader().load('skyboxes/JARDIMSENSORIAL WIDE PLUS.jpg');
+      const texture = new THREE.TextureLoader().load(panoramas[currentPanoramaIdx].path);
       const material = new THREE.MeshBasicMaterial({ map: texture });
-      const sky = new THREE.Mesh(geometry, material);
+      sky = new THREE.Mesh(geometry, material);
       scene.add(sky);
 
       // Controls
       controls = new DeviceOrientationControls(camera);
+
       window.addEventListener('resize', onWindowResize);
+      animate();
+    }
+
+    function disposePanorama() {
+      started = false;
+      window.removeEventListener('resize', onWindowResize);
+      if (renderer) {
+        renderer.dispose?.();
+        if (renderer.domElement && renderer.domElement.parentNode) {
+          renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }
+        renderer = null;
+      }
+      if (scene && sky) {
+        scene.remove(sky);
+        sky.geometry.dispose();
+        sky.material.dispose();
+        sky = null;
+      }
+      controls = null;
+      camera = null;
+      scene = null;
     }
 
     function onWindowResize() {
-      if (!started) return;
+      if (!started || !camera || !renderer) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     function animate() {
+      if (!started) return;
       requestAnimationFrame(animate);
       if (controls) controls.update();
-      renderer.render(scene, camera);
+      if (renderer && scene && camera) renderer.render(scene, camera);
     }
   </script>
 </body>
