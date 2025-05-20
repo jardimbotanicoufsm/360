@@ -1,8 +1,8 @@
 [
-    { "name": "Jardim Sensorial", "path": "skyboxes/JARDIMSENSORIAL WIDE PLUS.jpg" },
-    { "name": "Área Principal", "path": "skyboxes/CAMPO ABERTO UW PLUS.jpg" },
+    { "name": "Jardim Sensorial", "path": "skyboxes/jardim-sensorial.jpg" },
+    { "name": "Área Principal", "path": "skyboxes/area-principal-uw.jpg" },
     { "name": "Interior Prédio", "path": "skyboxes/interior.jpg" },
     { "name": "Trilha Bambu", "path": "skyboxes/bambu.jpg" },
-    { "name": "Telhado Verde", "path": "skyboxes/telhado-verde.jpg" }
-
+    { "name": "Telhado Verde", "path": "skyboxes/telhado-verde.jpg" },
+    { "name": "Entrada", "path": "skyboxes/entrada.jpg" }
 ]
