@@ -50,10 +50,12 @@
       .then(data => {
         panoramas = data;
         panoramas.forEach((p, idx) => {
-          const opt = document.createElement('option');
-          opt.value = idx;
-          opt.textContent = p.name;
-          panoramaSelect.appendChild(opt);
+          if (p.enabled) {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = p.name;
+            panoramaSelect.appendChild(opt);
+          }
         });
       });
 
