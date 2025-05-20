@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="imageLoadingSpinner">
+    <div class="spinner"></div>
+    <div class="loading-text">Carregando panorama...</div>
+  </div>
   <div id="menu">
     <h1>Jardim Botânico Santa Maria - Visão 360º</h1>
     <div id="comboContainer">
@@ -30,6 +34,7 @@
     const visualizarBtn = document.getElementById('visualizarBtn');
     const backBtn = document.getElementById('backBtn');
     const startButton = document.getElementById('startButton');
+    const imageLoadingSpinner = document.getElementById('imageLoadingSpinner');
 
     // Variáveis do THREE.js
     let camera, scene, renderer, controls, sky, started = false;
@@ -85,6 +90,9 @@
 
     function startPanorama() {
       started = true;
+      // Mostrar spinner de imagem
+      imageLoadingSpinner.style.display = 'flex';
+
       // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -101,10 +109,25 @@
       // Sky
       const geometry = new THREE.SphereGeometry(500, 60, 40);
       geometry.scale(-1, 1, 1);
-      const texture = new THREE.TextureLoader().load(panoramas[currentPanoramaIdx].path);
-      const material = new THREE.MeshBasicMaterial({ map: texture });
-      sky = new THREE.Mesh(geometry, material);
-      scene.add(sky);
+
+      // Carregar textura com callback para esconder spinner
+      new THREE.TextureLoader().load(
+        panoramas[currentPanoramaIdx].path,
+        function(texture) {
+          // onLoad
+          const material = new THREE.MeshBasicMaterial({ map: texture });
+          sky = new THREE.Mesh(geometry, material);
+          scene.add(sky);
+          imageLoadingSpinner.style.display = 'none';
+        },
+        function(xhr) {
+          // onProgress (opcional, não usado)
+        },
+        function(err) {
+          // onError
+          imageLoadingSpinner.querySelector('.loading-text').textContent = 'Erro ao carregar panorama.';
+        }
+      );
 
       // Controls
       controls = new DeviceOrientationControls(camera);
