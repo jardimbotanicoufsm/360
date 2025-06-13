@@ -5,5 +5,6 @@
     { "name": "Trilha Bambu", "path": "skyboxes/bambu.jpg", "enabled": true },
     { "name": "Telhado Verde", "path": "skyboxes/telhado-verde.jpg", "enabled": true },
     { "name": "Entrada", "path": "skyboxes/entrada.jpg", "enabled": true },
-    { "name": "Horta Mandala", "path": "skyboxes/horta-mandala.jpg", "enabled": true }
+    { "name": "Horta Mandala", "path": "skyboxes/horta-mandala.jpg", "enabled": true },
+    { "name": "Araucárias", "path": "skyboxes/araucaria.jpg", "enabled": true }
 ]
